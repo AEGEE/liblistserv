@@ -1,0 +1,13 @@
+>>> SIEVE_CANNOT_POST_ENVELOPE_MSG
+${envelope.from} cannot post here.
+${advertisement}
+>>> SIEVE_CANNOT_POST_MIME_MSG
+${headers.From} cannot post here.
+${advertisement}
+>>> SPAM_REQUEST_MSG
+Your mail was evaluated as spam and will not be delivered. For details send a 
+fax to +32-2-246.03.29, contact the AEGEE Postmaster or see www.aegee.org for further means how to come to us.
+${advertisement}
+SpamAssassin evaluation follows:${headers.X-Aegee-Spam-Report}
+>>> SIEVE_OVERSIZED_MSG
+Your email exceeds %s . 

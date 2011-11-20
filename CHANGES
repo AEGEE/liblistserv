@@ -1,0 +1,2 @@
+2010-09-15
+listserv_init checked for the .listserv file in the geteuid home directory, changed to getuid

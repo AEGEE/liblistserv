@@ -1,0 +1,22 @@
+liblistserv is a reentrant library to facilitate the communication with a running listserv .  It sends commands to listserv using the TCPGUI interface, and parses the results to provide the C developer with ready to use structures.
+
+Package structure
+  /
+    AUTHORS          - lists the authors of liblistserv
+    ChangeLog        - contains all changes towards previous releases
+    configure.ac     - input for autoconf
+    COPYING          - license for this package
+    Makefile.am      - input for automake
+    NEWS             - major changes towars previous releases
+    INSTALL          - installation instructions.  Check the documentation for details
+    README           - this file
+    sieve.mailtpl    - to be appended to site.mailtpl
+  /doc               - documentation
+  /src               - sources
+    content_filter.l - implements listserg_getcontent_filter
+    demo.c           - sample progamme using liblistserv
+    lcmdx.c          - implements the listserv_command
+    liblistserv.c    - implements most exported functions
+    liblistserv.h    - declares the exported functions
+    list_header.l    - implements listserv_getlist_keyword
+    sieve_scripts.c  - implements listserv_getsieve_scripts

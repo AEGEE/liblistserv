@@ -1,0 +1,19 @@
+23.02.2011 Include checks for values returned by malloc and strdup.
+
+22.02.2011 Relese 1.0.2
+
+22.02.2010 Fixed portability problem (moved #include src/util.h in src/content_filter.h in the beginning of the lex-file, so that config.h is included before the other headers).
+
+22.02.2010 Update to more recent gnulib and libtool.  Fixed gnulib-related things in Makefile.am, src_liblibstserv_la_LDFLAGS
+
+24.11.2010 Change in -unsubscrie-request scripts generated from sieve_scripts.  Before the change the scripts had the form if not envelope ... reject; if not address ... reject; Now the scripts have the form if not anyof (envelope, address) reject, meaning emails will be rejected if both the envelope and mime addresses are not subscribed to the list.
+
+18.11.2010 Release 1.0.1
+
+12.11.2010 Updates sieve.mailtpl the templates SIEVE_CANNOT_POST_ENVELOPE_MSG and SIEVE_CANNOT_POST_MIME_MSG, the envelope to address is not shown during the SMTP rejection (the SMTP error reports make anyway clear, which recipient address has failed).
+
+12.11.2010 Fixed bug in listserv_getsieve_scripts for lists with Send = Editor, Hold and Sublists = ...
+
+12.11.2010 Faster liblistserv_getsubscriptions, listserv_getsubscriber, listserv_getsubscribers and listserv_getsieve_scripts.  They all depended on the internal function listserv_parse_query_qui which used strstr.
+
+15.12.2009 Release 1.0

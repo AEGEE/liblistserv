@@ -1,0 +1,857 @@
+\Input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename liblistserv.info
+@include version.texi
+@settitle liblistserv Manual @value{VERSION}.
+@c %**end of header
+
+@copying
+This manual is for liblistserv (version @value{VERSION}, @value{UPDATED}), which provides a C-interface to communicate over TCPGUI with Lsoft's listserv.
+
+Copyright @copyright{} 2010 Free Software Foundation, Inc.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being ``A GNU Manual,''
+and with the Back-Cover Texts as in (a) below.  A copy of the
+license is included in the section entitled ``GNU Free Documentation
+License.''
+
+(a) The FSF's Back-Cover Text is: ``You have the freedom to
+copy and modify this GNU manual.  Buying copies from the FSF
+supports it in developing GNU and promoting software freedom.''
+@end quotation
+@end copying
+@dircategory Libraries
+@direntry
+* liblistserv: (liblistserv). 	       Library to communicate with Lsoft's listserv.
+@end direntry
+@setchapternewpage off
+
+@titlepage
+@title liblistserv 
+@subtitle Updated @value{UPDATED}
+@author Dilyan Palauzov
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+@headings double
+@contents
+@ifnottex
+@node Top, Introduction, (dir), (dir)
+@top liblistserv
+
+@end ifnottex
+This manual is for liblistserv (version @value{VERSION}, @value{UPDATED}), which provides a C-interface to communicate over TCPGUI with Lsoft's listserv.
+@menu
+* Introduction::                
+* Reporting Bugs::              
+* History and Motivation::      
+* Installation and Configuration::  
+* Limitations::                 
+* Memory Model and Thread Safety::  
+* Tutorial::                    
+* Structures Reference::        
+* Functions Reference::         
+* About::                       
+* GNU Free Documentation License::  
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Tutorial
+
+* Connecting and sending commands to listserv::  
+* Retrieving Files and Mail Templates::  
+* Owned Lists::                 
+* Dealing with List Headers::   
+* Working with Subscriptions::  
+* Sieve Scripts::               
+* Parsing CONTENT_FILTER::      
+
+Structures Reference
+
+* struct listserv::             
+* struct listserv_subscriber::  
+* struct listserv_content_filter::  
+
+Functions Reference
+
+* listserv_init and listserv_shutdown::  
+* listserv_command::            
+* listserv_getfile::            
+* listserv_getmail_template::   
+* listserv_content_filter::     
+* listserv_getowned_lists::     
+* listserv_getheader::          
+* listserv_putheader::          
+* listserv_getlist_keyword::    
+* listserv_getsubscriber::      
+* listserv_getsubscribers::     
+* listserv_getsubscriptions::   
+* listserv_getsieve_scripts::   
+
+@end detailmenu
+@end menu
+
+@node Introduction, Reporting Bugs, Top, Top
+@chapter Introduction 
+
+Listserv is software for managing mailing lists: creating lists, distributing emails over the list, adding new subscribers, adjusting settings.  It can be operated via web interface, by sending email commands or via TCP.
+
+liblistserv is the glue between listserv and your C-programme for manipulating or querying mailing list.  By calling the provided functions, your programme does not need to parse the results.  Liblistserv is a reentrant library, written in C, meant for communication over TCP with a running Listserv instance.
+
+See the tutorial for some examples.
+
+@node Reporting Bugs, History and Motivation, Introduction, Top
+@chapter Reporting Bugs
+
+We welcome bug reports and suggestions for any aspect of liblistserv: system, programs, documentation, installation, anything.  Please email them to
+@email{liblistserv@@aegee.org}.  You can get the latest version of mailing-lists-sieve from @uref{http://mail.aegee.org/software/liblistserv/}.
+
+For bug reports, please include enough information for the maintainers
+to reproduce the problem.  Generally speaking, that means:
+
+@itemize @bullet
+@item the version number of Texinfo and the program(s) or manual(s) involved.
+@item hardware and operating system names and versions.
+@item the contents of any input files necessary to reproduce the bug.
+@item a description of the problem and samples of any erroneous output.
+@item any unusual options you gave to @command{configure}.
+@item anything else that you think would be helpful.
+@end itemize
+
+When in doubt whether something is needed or not, include it.  It's
+better to include too much than to leave out something important.
+
+Patches are most welcome; if possible, please make them with
+@samp{@w{diff -c}} (@pxref{Top,, Overview, diff, Comparing and Merging
+Files}) and include @file{ChangeLog} entries (@pxref{Change Log,,,
+emacs, The GNU Emacs Manual}), and follow the existing coding style.
+
+@node History and Motivation, Installation and Configuration, Reporting Bugs, Top
+@chapter History and Motivation
+
+I (the author) noticed once upon a time that the mail server I manage is blacklisted and in turn the sent mails reach the spam folders of the recipients.  I wanted very much to get out of the black lists and came to the idea that the black listing is caused by the bounces sent from listserv.  My wish was to create a system, that can reject mails during the SMTP dialog instead of letting listserv receive and then bounce them.  The idea was to generate for every mailing list a Sieve script, that is evaluated at SMTP-time and rejects mails during the SMTP dialog, when feasible.  Unlike other systems for mailing lists, where the not-good emails are either discarded or sent to the listowners, with this approach my listowners are not bothered with manually proceeding the (probably spam) emails, and enjoy more free time.  At the same time no email is lost.
+
+What is Sieve?  A language for filtering emails.  Developed by IETF within the Sieve Working Group, it allows to define rules for out-of-office messages, to put an incoming email in a folder, depending on the sender or the mail size, but most of all: Sieve/RFC5228 is a OS-independant way to say what emails shall be returned back to the sender, instead of ending in your spam folder.
+
+So I ended writing two programmes: one to generate and upload the Sieve scripts, and one to evaluate them.  After a while I noticed, that the features in the programme for script generation and upload can be used by other programmes for communication with listserv over the TCPGUI interface.  I separated the code from the programme that communicates with listserv in a separate library and here it is.
+
+The other two parts: the code for uploading the Sieve scripts and for the script evaluation can be found at @url{http://mail.aegee.org/software} (when published).
+
+At the end I succeeded: now I reject a lot of emails during the SMTP dialog and my server is not blacklisted.
+ 
+@node Installation and Configuration, Limitations, History and Motivation, Top
+@chapter Installation and Configuration
+    liblistserv can be installed via the usual @code{./configure && make install} paradigm.
+
+    The templates from @file{sieve.mailtpl} are needed if you need to use listserv_getsieve_scripts .  Append @file{sieve.mailtpl} to @file{site.mailtpl}.  For details, @xref{listserv_getsieve_scripts}.
+
+    @anchor{configuration-file}You have the possibility to store the connection parameters between your programme and listserv a file, instead of providing them as parameter in listserv_init.  The configuration file is @file{~/.liblistserv} , or if not found, @file{$@{sysconfdir@}/liblistserv.conf} . $@{sysconfdir@} is specified at `./configure' with @code{--sysconfdir} and is usually /etc or /usr/local/etc .
+
+    The configuration file consists of a single line with two or three words.  The first word is the email address, that will be used to connect to listserv.  The second word is the corresponding password.  Listservs permits over the webinterface mixed-cases passwords, but it seems that over the TCPGUI interface only big-case passwords function.  The third, optional parameter is the host and port where listserv runs, in the format host:port .  2306 is assumed for the port, when not provided.  If post:host is missed, localhost:2306 is assumed.  The newline at the end of the line is optional.
+
+  Example configuration file @file{/root/.liblistserv}
+@example
+root@@aegee.org MYPASSWORD listserv.example.int:2306
+@end example
+@node Limitations, Memory Model and Thread Safety, Installation and Configuration, Top
+@chapter Limitations
+
+  Listserv does not offer:
+@itemize @bullet
+@item Retrieval of @file{Language.mailtpl} files, specificed in the @env{Language=} header keyword.
+@item Deletion of files: list headers and templates
+@end itemize
+
+  TCPGUI is a TCP interface designed for synchronous communication with listserv.  liblisterv can send only single line commands to listserv, including upload of list headers.
+
+  TCPGUI does not offer:
+@itemize @bullet
+@item Upload of @file{.wwwtpl} and @file{.mailtpl} files
+@item Bulk operations: delete/insert, except the delete all paradigm
+@item Upload of files, except list headers
+@end itemize
+
+  Limitations of liblisterv (TODO)
+@itemize @bullet
+@item no SSL support
+@item no special support for UTF-8 data
+@item no write functions for list headers
+@itemize @minus
+@item add new keywords/values
+@item replace/delete values of existing keywords
+@end itemize
+@item cannot read the pure *.list files
+@item does not have php binding, or sample php ajax script
+@item does not put the subscr. topics into struct listserv_subscriber
+@item listserv_getsieve_scripts does not offer
+@itemize @minus
+@item building scripts that do use ihave
+@item building scripts that do use variables
+@item building scripts that report not only From:, but also Sender:, Resent-From: and Resent-Sender: in the rejection text
+@item use more templates
+@end itemize
+@end itemize
+@node Memory Model and Thread Safety, Tutorial, Limitations, Top
+@chapter Memory Model and Thread Safety
+  liblistserv is reentrant library.  You can use it in threads, if each thread calls its own @code{listserv_init} and @code{listserv_shutdown}.
+
+  liblistserv frees all the memory allocated by it, the latest when @code{liblistserv_shutdown} is called.
+
+  You can use the returned value of a liblistserv funcion until another listserv function is called.  More concrete, the returned value of@dots{}
+@table @code
+@item listserv_getsubscriber
+@itemx listserv_getsubscriebrs
+@itemx listserv_getsubscriptions
+is freed at the next call of one of these functions or @code{listserv_getsieve_scripts}.
+@item listserv_content_filter
+is valid until subsequent call of the same function or @code{listserv_getsieve_scripts}.
+@itemx listserv_getowned_lists
+is valid until listserv_shutdown is called.
+@item listserv_getsieve_scripts
+is valid until subsequent call of the same function.
+@item listserv_command
+is destroyed upon the next call of any listserv function.
+@item listserv_getlist_keyword
+is valid until subsequent call of the same function over another list or @code{listserv_getsieve_scripts}.
+
+    Example:
+@example
+    char **owners = listserv_getlist_keyword (l, "ABC-L", "Owner");
+    char **notebook = listserv_getlist_keyword (l, "ABC-L", "Notebook");
+    //at this time owners[0], owners[1]@dots{} are valid and contain the listowners of ABC-L
+    char **sizelim = listserv_getlist_keyword (l, "DEF-L", "SizeLim");
+    //here the values pointed by owners and notebook are invalid
+@end example
+@end table
+@node Tutorial, Structures Reference, Memory Model and Thread Safety, Top
+@chapter Tutorial
+Here are some samples how to make best use liblistserv.
+
+@c The programme src/demo.c demonstrates some of them.
+@menu
+* Connecting and sending commands to listserv::  
+* Retrieving Files and Mail Templates::  
+* Owned Lists::                 
+* Dealing with List Headers::   
+* Working with Subscriptions::  
+* Sieve Scripts::               
+* Parsing CONTENT_FILTER::      
+@end menu
+
+@node Connecting and sending commands to listserv, Retrieving Files and Mail Templates, Tutorial, Tutorial
+@section Connecting and sending commands to listserv
+The connection is initialized with @code{listserv_init} and data is freed with @code{listserv_shutdown}.  Commands are sent with @code{listserv_command}.
+
+liblistserv opens a new TCP connection on each command.  But @code{listserv_init} and @code{listserv_shutdown} have to be called just once.
+
+Let's send the command "GET default.mailtpl".
+@example
+  struct listserv *l = listserv_init (NULL, NULL, NULL);
+  printf ("The result of 'GET default.mailtpl' is: %s\n",
+  listserv_command (l, "GET default.mailtpl"));
+  listserv_shutdown (l);
+@end example
+That's all.  Details about the functions parameters are provided in the reference for the respective function.
+
+For the following sections in this manual it will be assumed that the variable @var{l} contains the return value of @code{listserv_init}.
+@node Retrieving Files and Mail Templates, Owned Lists, Connecting and sending commands to listserv, Tutorial
+@section Retrieving Files and Mail Templates
+For many commands you don't need to use @code{listserv_command} and parse the results: liblistserv does this for you.  In the previous chapter you retrieved with @code{listserv_command} the file @file{default.mailtpl}.  You can do it also with the command
+@example
+  char *default_mailtpl = listserv_getfile(l, "default.mailtpl");
+@end example
+
+Now imagine you want to get the active ADD1 mail template for the list ABC-L . You can try to find it in @file{abc-l.mailtpl}, @file{site.mailtpl} or @file{default.mailtpl}, but you can rely on liblistserv to do all this tasks for you
+@example
+   char *add1_template = listserv_getmail_template(l, "ABC-L", "ADD1");
+@end example
+@node Owned Lists, Dealing with List Headers, Retrieving Files and Mail Templates, Tutorial
+@section Owned Lists
+You can send to listserv whatever commands you want, but it will limit your actions just on the lists you own.  You can check which lists are these with:
+@example
+  char** my_lists = listserv_getowned_lists(l);
+@end example
+  my_lists[0] is the name of the first list you own, my_lists[1] of the second and so on until my_list[i] is NULL.
+@node Dealing with List Headers, Working with Subscriptions, Owned Lists, Tutorial
+@section Dealing with List Headers
+With @code{listserv_getfile} you can get a file from listserv.  One very special kind of files are the .list files.  liblistserv gives you the possibility to read and store list headers as well as to parse them to get the active values of the keywords.
+@example
+  char* list_header = listserv_getheader (l, "ABC-L", 0);
+@end example
+
+The last parameter says if the list header must be locked.  
+
+Now @code{list_header} contains something like
+@example
+* Address Book Coordination
+* 
+* Owner = nichts@@aegee.org
+@end example
+
+You can store the list header back to the server with
+@example
+listserv_putheader (l, "ABC-L", list_header);
+@end example
+
+Or you can install a new list with:
+@example
+  listserv_putheader (l, "DEF-L", "\
+* This Effective Liblistserv!\r\n\
+* \r\n\
+* Owner = nichts@@example.org\r\n\
+* Owner = Quiet:, invalid-address@@example.org");
+@end example
+
+If you want to check the values of some keyword, you can use @code{listserv_getlist_keyword}:
+@example
+char **owner = listserv_getlist_keyword (l, "DEF-L", "Owner");
+@end example
+
+ Now owner[0] contains "nichts@@example.org" , owner[1] contains "Quiet:", owner[2] is "invalid-address@@example.org", and owner[3] is NULL.
+
+If some keyword is not presented in the list header, you get its default value:
+@example
+char **ack = listserv_getlist_keyword(l, "DEF-L", "Ack");
+@end example
+  ack[0] is "No" and ack[1] is NULL.
+@node Working with Subscriptions, Sieve Scripts, Dealing with List Headers, Tutorial
+@section Working with Subscriptions
+liblistserv provides you with three functions to get the subscribers with their options from lists:
+@table @code
+@item listserv_getsubscriber
+returns options for one subscriber on one list
+@item listserv_getsubscribers
+returns options for one subscriber on many lists
+@item listserv_getsubscriptions
+returns options for all subscibers on one list
+@end table
+
+Example:
+@example
+struct listserv_subscriber *subscriber =
+   listserv_getsubscriber (l, "ABC-L", "nichts@@aegee.org");
+if (subscriber == NULL)
+    printf ("nichts@@aegee.org is not subscribed to ABC-L.\n");
+else
+    printf ("nichts@@aegee.org is subscribed on ABC-L since %s.\n",
+           subscriber->date);
+@end example
+
+The other two functions return NULL terminated array of struct listserv_subscribers:
+@example
+struct listserv_subscribers **subscribers;
+// get the lists where nichts@@aegee.org is subscribed
+subscribers = listserv_getsubscriptions (l, "nichts@@aegee.org");
+// get all subscribers of the list ABC-L
+subscribers = listserv_getsubscribers (l, "ABC-L");
+@end example
+@node Sieve Scripts, Parsing CONTENT_FILTER, Working with Subscriptions, Tutorial
+@section Sieve Scripts
+@code{listserv_getsieve_scripts} parses the list settings and generates Sieve scripts.  When applied at SMTP-Level to incoming emails for the mailing lists, the scripts reject messages that would be bounced by listserv.  In this way listserv is prohibited to bounce emails, and messages get rejected rather than bounced.  In turn the server running listserv is not blacklisted, as the bounces do not end in honeypots for spam.
+
+For a mailing list several email addresses are allocated, e.g. LIST-L@@, LIST-L-request@@, owner-LIST-L@@ . @code{listserv_getsieve_scripts} generates scripts for all addresses.
+
+The odd elements of returned value contain the address for which the script is generated, and the even elements are the scripts theirselves.  The last (odd) element of the returned value is NULL.
+
+  Details about the algorithm, the options for generating the scripts, and the addresses for which scripts are generated, is provided in the documentation of @xref{listserv_getsieve_scripts}.
+
+Example:
+@example
+  char **scripts = listserv_getsieve_scripts (l, "ABC-L", 11);
+
+  scripts[0] contains the name of the first script like ABC-L, scripts[1] is the script itself, scripts[2] contains the name of the second script like ABC-L-request, scripts[3] is the script itself@dots{} When scripts[2i+1] is NULL there are no more scripts.
+@end example
+
+   The last parameter of listserv_getsieve_scripts contains bitwise ORed extensions for generating the script. 11 stands for 1 (supports test envelope) + 2 (supports action reject) + 8 (supports external lists).
+@node Parsing CONTENT_FILTER,  , Sieve Scripts, Tutorial
+@section Parsing CONTENT_FILTER
+To scan the actions in the list's CONTENT_FILTER template you don't need to call @code{listserv_getmail_template} and parse the results.  You can just rely on @code{listserv_getcontent_filter} .  Let's check the first action, stored in the CONTENT_FILTER of the list ABC-L:
+
+@example
+struct listserv_content_filter** content_filter =
+    listserv_getcontent_filter (l, "ABC-L");
+if (content_filter[0] == NULL)
+    printf ("No actions in CONTENT_FILTER for ABC-L.\n");
+else @{
+    printf ("Scan in 'Text', 'Header' or specific header: %s\n",
+            content_filter[0]->header);
+    printf ("Scan for: \"%s\".\n", content_filter[0]->value);
+    switch (content_filter[0]->action) @{
+      case 'A': printf ("The action is ACCEPT.\n"); break;
+      case 'R': printf ("The action is REJECT.\n"); break;
+      case 'M': printf ("The action is MODERATE.\n"); break;
+      case 'D': printf ("The action is DISCARD.\n"); 
+    @}
+    if (content_filter[0]->text)
+        printf ("The provided action parameter is \"%s\".\n",
+                content_filter[0]->text);
+    if (content_filter[1])
+        printf ("There is a second action in CONTENT_FILTER for ABC-L.\n");
+@}
+@end example
+@node Structures Reference, Functions Reference, Tutorial, Top
+@chapter Structures Reference
+  Functions in liblistserv can return data in one of these structures:
+
+@menu
+* struct listserv::             
+* struct listserv_subscriber::  
+* struct listserv_content_filter::  
+@end menu
+
+@node struct listserv, struct listserv_subscriber, Structures Reference, Structures Reference
+@section struct listserv
+ struct listserv is an opaque structure, that contains connection data to listserv and has pointers to the memory allocated by liblistserv.
+
+  You can use (char*)listserv.email, (char*)listserv.password, (int)listserv.port and (struct addrinfo*)listserv.addrres to see where liblistserv connects.
+@node struct listserv_subscriber, struct listserv_content_filter, struct listserv, Structures Reference
+@section struct listserv_subscriber
+struct listserv_subscriber represents one subscriber on a mailing list.
+@example
+struct listserv_subscriber @{
+  char *email; //the subscribed email address
+  char *date; //the subscription date
+  char *list; //the list with the subscription
+  char **topics; //for now always null
+  int options; //subscription options
+@}
+@end example
+
+  The parameter @code{options} contains bitwise ORed options as follows:
+@example
+  xxxx xxx0  POST
+  xxxx xxx1  NOPOST
+  xxxx x00x  NOMAIL
+  xxxx x01x  MAIL
+  xxxx x10x  DIGEST
+  xxxx x11x  INDEX
+  xxxx 0xxx  NOREPRO
+  xxxx 1xxx  REPRO
+  xx0x xxxx  NOMIME
+  xx1x xxxx  MIME
+  x0xx xxxx  NOHTML
+  x1xx xxxx  HTML
+  0xxx xxxx  NOCONCEAL
+  1xxx xxxx  CONCEAL
+@end example
+@node struct listserv_content_filter,  , struct listserv_subscriber, Structures Reference
+@section struct listserv_content_filter
+struct listserv_content_filter is the result of parsing the CONTENT_FILTER mail template.
+
+@example
+enum listserv_content_filter_actions @{ REJECT = 'R', ALLOW = 'A',
+				       MODERATE = 'M', DISCARD = 'D'@};
+
+struct listserv_content_filter @{
+  char* header; //contains 'Text', 'Header' or the concrete header-field
+  char* value;  //the header-value, NULL if header shall be empty/not presented
+  char *text;   //parameter of REJECT or DISCARD, optionally ""
+  enum listserv_content_filter_actions action;  //'R' - reject, 'A' - allow, 'M' -  moderate, 'D' - discard
+@};
+@end example
+@node Functions Reference, About, Structures Reference, Top
+@chapter Functions Reference
+liblistserv API consists of the functions:
+
+@menu
+* listserv_init and listserv_shutdown::  
+* listserv_command::            
+* listserv_getfile::            
+* listserv_getmail_template::   
+* listserv_content_filter::     
+* listserv_getowned_lists::     
+* listserv_getheader::          
+* listserv_putheader::          
+* listserv_getlist_keyword::    
+* listserv_getsubscriber::      
+* listserv_getsubscribers::     
+* listserv_getsubscriptions::   
+* listserv_getsieve_scripts::   
+@end menu
+
+@node listserv_init and listserv_shutdown, listserv_command, Functions Reference, Functions Reference
+@section listserv_init and listserv_shutdown
+@deftypefn Function {struct listserv*} listserv_init (const char @var{*email}, const char @var{*password}, const char @var{*host});
+Initializes a struct listserv* and makes possible subsequent execution of commands over TCPGUI.
+
+If @var{password} is NULL, the parameters are read from a config file.  For defails, @pxref{configuration-file}.
+
+If no configuration file is found, an error message is printed at stderr, and the function returns NULL.
+
+If @var{email} is NULL, then @@ is used as @var{email}.
+
+The @var{host} is in the host:port format.  If the :port part is missing, 2306 is assumed.
+
+If @var{host} is NULL, localhost is assumed.
+
+listserv_init does not check if it is possible to connect with the provided information, the email/password/port combination is valid, or if listserv is runniung.
+@end deftypefn
+@deftypefn Function void listserv_shutdown (struct listserv @var{*l});
+Frees the memory allocated by function invocations using this struct listserv* .
+@end deftypefn
+@node listserv_command, listserv_getfile, listserv_init and listserv_shutdown, Functions Reference
+@section listserv_command
+@deftypefn Function char* listserv_command (struct listserv @var{*l}, const char @var{*command});
+
+Sends @var{command} to listserv and returns the result.  Errors in the communication protocol are reported to stderr.  When there is an error, listserv_command returns a char* with '0' as first character.  Example:
+
+@example
+char *ret = listserv_command (l, "SHOW VERSION");
+if (ret[0] == '0') printf ("listserv_command failed");
+@end example
+@end deftypefn
+@node listserv_getfile, listserv_getmail_template, listserv_command, Functions Reference
+@section listserv_getfile
+@deftypefn Function char* listserv_getfile (struct listserv @var{*l}, const char @var{*filename});
+
+Sends "GET filename (MSG" to listserv and returns the result.  It is not possible to retrieve language.mailtpl files, when lanugage is specified in a Language = keyword.
+@end deftypefn
+@node listserv_getmail_template, listserv_content_filter, listserv_getfile, Functions Reference
+@section listserv_getmail_template
+@deftypefn Function char* listserv_getmail_template (struct listserv @var{*l}, const char @var{*listname}, const char @var{*template});
+
+Gets the actual mail @var{template} for list @var{listname}.  The function searches for ">>> template" in @file{@var{listname}.mailtpl}, @file{site.mailtpl} and @file{default.mailtpl} in this order.  Searching in the language.mailtpl is not performed.
+
+When found listserv_getmail_template makes a copy of the template and returns it.  Otherwise listserv_getmail_template returns empty string ("").
+@end deftypefn
+@node listserv_content_filter, listserv_getowned_lists, listserv_getmail_template, Functions Reference
+@section listserv_content_filter
+@deftypefn Function {struct listserv_content_filter**} listserv_getcontent_filter (struct listserv @var{*l}, const char @var{*listname});
+
+The function retrieves the actual CONTENT_FILTER mail template for @var{listname}, parses it, and returns the results in a NULL-rerminated array of struct listserv_content_fitler*s .  The match type, specified by singe or double colon after the header-field, is always "IS".  When a header is supposed to "CONTAIN" something, listserv_content_filter inserts asterisks (*) at the begin and at the end of header-value.
+
+E.g. if CONTENT_FILTER is
+@example
+  X-Friends: Yes
+  Action: Allow
+  X-Spam:: Yes
+  Action: REJECT This is spam
+@end example
+the return values are
+@example
+  @{ /*first rule */ @{
+    "X-Friends"    /* header-field */,
+    "*Yes*"        /* header-value */,
+    NULL,          /* there is no text after allow */
+    'A'            /* ACTION ALLOW */ @},
+    /* second rule */ @{
+    "X-Friends"    /* header-field */,
+    "Yes"          /* header-value */,
+    "This is spam" /* rejection reason */,
+    'R'            /* ACTION REJECT */ @}
+@}
+@end example
+@end deftypefn
+@node listserv_getowned_lists, listserv_getheader, listserv_content_filter, Functions Reference
+@section listserv_getowned_lists
+@deftypefn Function char** listserv_getowned_lists (struct listserv @var{*l})
+
+Returns a NULL-terminated array of char* .  Each element is a list that is owned by the email/password used in listserv_init .
+@end deftypefn
+@node listserv_getheader, listserv_putheader, listserv_getowned_lists, Functions Reference
+@section listserv_getheader
+@deftypefn Function char* listserv_getheader (struct listserv @var{*l}, const char @var{*filename}, char @var{lock});
+
+Sends "GET filename (NOLOCK HDR MSG" when lock == 0, "GET filename (HDR MSG" otherwise, to listserv and returns the result.
+
+If the @var{filename} is a non-existant list, NULL is returned.
+@end deftypefn
+@node listserv_putheader, listserv_getlist_keyword, listserv_getheader, Functions Reference
+@section listserv_putheader
+@deftypefn Function char* listserv_putheader (struct listserv @var{*l}, const char @var{*filename}, const char @var{*data})
+Issues the "X-STL @var{filename} " command to listserv, followed by @var{data}.  @var{data} must be formatted as listserv-list definition, as returned by @xref{listserv_getheader}.  listserv_putheader converts @var{data}, as described in the documentation of X-STL, see Listserv's Advanced Topic Manual, section The LISTSERV TCPGUI Interface .
+@end deftypefn
+@node listserv_getlist_keyword, listserv_getsubscriber, listserv_putheader, Functions Reference
+@section listserv_getlist_keyword
+@deftypefn Function char** listserv_getlist_keyword (sturct listserv @var{*l},  const char @var{*listname}, const char @var{*keyword});
+
+Parses the headers of @var{listname}, and returns a NULL-terminated array with the values of @var{keyword}.  Each element in the array is the consequent value of @var{keyword}.
+
+To get the list title, use @env{Title} as @var{keyword}.
+
+The value of @env{SizeLim} is always converted to bytes.  When @env{Sizelim} is specified in lines, the returned value of listserv_getlist_keyword is @env{SizeLim} multiplied by 80.
+
+When @env{Subscription} is "By Owner" (outdated form of By_Owner), listserv reports "By" as value and ignores the subsequent values.
+
+If @var{keyword} is not presented in the list configuration, the default values are returned.  There is no way to determine whether @var{keyword} is missing in the list configuration, or it is set to its default value.
+
+When @var{keyword} is unknown (not documented), the returned value is @code{@{"Unknown keyword", NULL@}}.
+
+@example
+Examples:
+Sizelim is      returned value
+100             @{"8000", NULL@}
+100K            @{"102400", NULL@}
+10M             @{"10485760", NULL@}
+@end example
+@end deftypefn
+@node listserv_getsubscriber, listserv_getsubscribers, listserv_getlist_keyword, Functions Reference
+@section listserv_getsubscriber
+@deftypefn Function {struct listserv_subscriber*} listserv_getsubscriber (struct listserv @var{*l}, const char @var{*listname}, const char @var{*email})
+
+If @var{email} is subscribed to @var{listname}, returns the subscription options.  Otherwise returns NULL.
+@end deftypefn
+@node listserv_getsubscribers, listserv_getsubscriptions, listserv_getsubscriber, Functions Reference
+@section listserv_getsubscribers
+@deftypefn Function {struct listserv_subscriber**} listserv_getsubscribers (struct listserv @var{*l}, const char @var{*listname})
+
+Returns a NULL-terminated array, containting the subscription options of the subscribers of @var{listname}.
+@end deftypefn
+@node listserv_getsubscriptions, listserv_getsieve_scripts, listserv_getsubscribers, Functions Reference
+@section listserv_getsubscriptions
+@deftypefn Function {struct listserv_subscribers**} listserv_getsubscriptions (struct listserv @var{*l}, const char @var{*email})
+
+Returns a NULL-terminated array, containing all the subscription options to all lists for @var{email}.
+@end deftypefn
+@node listserv_getsieve_scripts,  , listserv_getsubscriptions, Functions Reference
+@section listserv_getsieve_scripts
+@deftypefn Function char** listserv_getsieve_scripts (struct listserv @var{*l}, const char @var{*listname}, int unsigned @var{extensions});
+
+Returns a NULL-terminated array, containing Sieve scripts for proceeding the emails for @var{listname}.  For each list, listserv_getsieve_scripts generates several scripts: for owner-@var{listname}@@, @var{listname}-request@@, @var{listname}@@, @var{listname}-signoff-request@@, @var{listname}-subscribe-request@@, @var{listname}-server@@, @var{listname}-search-request@@, @var{listname}-unsunsubscribe-request@@, @var{listname}-check-subscription@@ .  One of the mentioned script names, not containing the @@-sign and the domain, is in the odd returned values.  The actual scripts are in the even returned values.  The last odd value is NULL.
+
+The generated scripts are supposed to reject incoming emails during the SMTP dialog, rather than to deliver them to listserv and let it bounce them.  In this way, bounces do not end in black lists and the server running listserv is not marked as spammer.
+
+As a side effect, listserv does not send emails to non-existing addresses and does not post enormous amounts of delivery-reports to the postmasters.  Th reduced amounts of delivery reports makes possible to check individually each of them  and take actions.
+
+Apart from rejecting emails, that will be anyway bounced by listserv, some more emails are rejected.  Details are provided in the logic for the individual scripts.
+
+@var{extensions} specifies the extensions that will be used by the generated scripts.  It is binary ORed combination of:
+@example
+    1  extension/test envelope 
+    2  extension/action reject
+    4  extension/action ereject
+    8  extension extlists
+   16  extension variables  /* for future use, not implemented */
+   32  extension/test ihave /* for future use, not implemented */
+ 4096  without size
+@end example
+When both 2 = reject and 4 = ereject are available, the scripts contain only ereject.
+
+If the provided @var{extensions} are not sufficient to build any script, listserv_getsieve_scripts returns an array with one value (NULL).
+
+The logic for each generated script is:
+@table @code
+@item @var{listname}@@
+  The script for the mailing list address can be sptlit into parts:
+@itemize @minus
+@item test envelope
+@item test size
+@item test MIME headers
+@item CONTENT_FILTER rules
+@item non-members case
+@end itemize
+
+@itemize @bullet
+@item Test envelope is inserted, only when @var{extensions} is odd and when the @env{Send} keyword does not contain Public.  All email addresses that can post to the list are inserted in the envelope test.  In particular:
+@itemize @minus
+@item list subscribers, when they are entitled to post to the list (@env{Send} = Private and do not have the NOPOST option)
+@item all email addresses mentioned in the @env{Send}, @env{Owner}, @env{Configuration-Owner}, @env{Moderator} and @env{Editor} keywords
+@item all email addresses mentioned as @env{Sub-Lists} of the current list, when @env{Send} contains Hold.
+@end itemize
+
+When extlists in @var{extensions} is disabled, all mentioned senders' addresses are inserted in the envelope test. E.g. if
+@example
+Owner = Owner(XYZ-L)
+Editor = ABC-L
+@end example
+then all email addresses subscribed to ABC-L and all addresses that can manage XYZ-L are inserted in the envelope test.  The latter has the form:
+@example
+if not envelope :is "from" ["", subscriber @dots{}] @{
+    reject "content of the mail template SIEVE_CANNOT_POST_ENVELOPE_MSG";
+    stop;
+@}
+@end example
+
+The "" indicates, that bounces can be sent to the list.  This is partially nonsense: the @var{listname}@@ address is never used as sender for lists, where only a limited amount of subscribers can post.  In turn there are no delivery-errors returned to the listname@@ address and hence the incoming mails for the list shall never be bounces.  However, the emails for AEGEE mailing lists go to an exim server, where greylisting and check-outs for the existence of the recipient addresses are perfomed.  This check-outs use as sender for the initial grey-listing request the original sender.  Subsequently they check one more time if the email can be delivered and then deliver the email.  In this additional check the sender is set to "".  So in order to receive emails for the list, the mailing lists server has to accept also bounces.
+
+When extlists is enabled, instead of the email addresses mentioned in the configuration of other lists, a reference to that lists is inserted.  The above mentioned example will be modified to:
+@example
+if not anyof (envelope :is "from" ["", subscribers @dots{}],
+              envelope :is :list "from" ["listserv:xyz-l", "listserv:abc-l|editor"]) @{
+    reject "content of the mail template SIEVE_CANNOT_POST_ENVELOPE_MSG";
+    stop;
+@}
+@end example
+When the scripts with extlists-support are later evaluated, the sieve interpreter checks at run-time if the sender is subscribed to the mentioned lists.  This is slower, compared to the case, when all relevant email addresses are directly mentioned in the envelope test and no additional queries to listserv are needed to evaluate the script.  The reader might think, that it would be better if all generated scripts do not use extlists, for faster evaluation.
+
+The most suitable time to generate a script for a list, is when the list is changed: somebody subscribes, signs off, or the list configuration is changed.  With this information in mind, in AEGEE we generate the scripts by a list exit, that is fired by listserv.  The list exit knows for which list the scripts shall be generated, but it does not know which lists depend on the current list (e.g. mention the subscribers of this list as editors for the other list).  When a list script is uploaded, all other list scripts' that depend on this list, must be updated, too.  This is currently not done.  Apart from this, listserv does not fire list exits on changed list configuration or bulk operations, thus it is not possible to keep the lists up to date.  The best option for the moment is to include references for the external lists.
+
+When Send = Editor, Hold with or without Confirm, then liblistserv modifies the interpretation of listserv.  Orinally listserv will permit everybody to propose emails for distribution over the list.  When Confirm is presented, then a lot of bounces are sent to the mail sender.  When Confirm is absent, the editors receive a lot of spam, that is hard to proceed manually.  liblistserv generates scipt, that reject emails for such lists, if the sender does not receive emails from the lists.  The latter means, that the sender is not Editor/Moderator/Owner/Configuration-Owner of the list, is not subscribed to the list and is not a member of a sub-list.
+
+@item  Test size is inserted, only when @var{extensions} & 4096 == 0, the @env{Attachment} keyword does not have Filter as value and either the @env{Language} keyword does not have NOHTML as value or the @env{Misc-Options} does not have DISCARD_HTML as value .  The test has the form
+
+@example
+if size :over 512K @{
+    reject "Your mail to $@{envelope.to@} exceeds 512KBytes.  Upload the attachments
+in internet and include a link to them in your email.";
+    stop;
+@}
+@end example
+
+  The value for the test (here 512K) is taken from the @env{SizeLim} keyword.  If @env{Sizelim} is omitted, the default @env{SizeLim} is used.
+
+  The idea to put the test size between envelope and MIME headers, is to evaluate it as early as possible --- during the SMTP MAIL FROM: command, when it has SIZE=-parameter, or after DATA, otherwise.  
+
+@item  Test MIME headers is inserted, when @env{Send} is not Public.  It has the form
+@example
+if not address :is ["From", "Sender", "Resent-From", "Resent-Sender"] [emails@dots{}] @{
+    reject "put here the content of the SIEVE_CANNOT_POST_MIME_MSG mail template.";
+    stop;
+@}
+@end example
+  The emails are obtained as described with the envelope test, excluding the "" test.  Bounces for a mailing list are rejected based on the unappropriatre MIME headers after DATA, not after envelope.  The considerations about the external lists are valid here, too.
+
+@item  The CONTENT_FILTER rules are created from the CONTENT_FILTER template, if there is one for the list, or the site.
+
+  Each rule has two parts: test and action.  The test is either for a header-field, for all headers or for a string in the whole email.  Tests for text in any header or tests for text contained in the email body are not mirrored in the Sieve scripts.  Subsequent tests are also not mirrored.
+
+When the action is MODERATE, ALLOW or DISCARD, the email is passed to Listserv.  When the action is REJECT, an ereject command is inserted in the Sieve script containing the reason for the rejection.  The reason is preceed with the text "Your posting to the @var{listname} list has been rejected by the content filter.".
+
+E.g. the CONTENT_FILTER template,
+@example
+  X-Spam-Level:: ++
+  Action: ALLOW
+  X-Spam-Level:: +++
+  Action: MODERATE
+  X-Spam-Level: ++++
+  Action: REJECT This is spam.
+@end example
+ generates the script
+@example
+if anyof( header :is "X-Spam-Level" "++",
+          header :is "X-Spam-Level" "+++") @{
+    stop;
+@}
+if header :contains "X-Spam-Level" "++++" @{
+    ereject "Your posting to the @var{listname} list has been rejected by the content filter.
+This is spam.";
+    stop;
+@}
+@end example
+
+@item  When @env{Send} has Non-Members as value, liblistserv modifies the intepreration of listserv.  Originally an email is sent back to the sender asking her/him to confirm the message.  This causes a lot of bounces and the purpose of liblistserv is to reduce the amount of bounces.  If such an email is not rejected by the content filter and the sender is not subscribed to the list, liblistserv redirects the email to the @env{Editor}s and @env{Moderator}s of the list.
+@end itemize
+
+@item @var{listname}-request@@
+     The script has the form:
+
+@example
+  require ["ereject"]; // or reject, if ereject is not available, and reject is
+  if header :contains "X-Spam-Level" "+++" @{
+      ereject the content of the SPAM_REQUEST_MSG template;
+  @} else @{
+      redirect to the non-quiet listowners of the list
+  @}
+@end example
+
+The incoming emails are not passed to listserv, and the principe of confirming the emails send to -request@@ addresses, before sending them to the list owner is circumvented.  In this way listserv sends less bounces.
+
+@item @var{listname}-check-subscription@@
+    The script has the form:
+
+@example
+    require ["envelope", "ereject"];
+    if not envelope :is "from" ["", the list subscribers] @{
+      reject "not subscribed";
+    @} else @{
+      discard;
+    @}
+@end example
+
+    The purpose is to be able to create programs, that use the SMTP protocol to say if an address is subscribed to a list or not.  See @url{http://mail.aegee.org/lists/ajax.html} for such a client.  The idea of envelope [""] is described for the script for @var{listname}@@, test envelope.  When extension/test envelope is not available, the script is not created (is "").
+
+@item @var{listname}-unsubscribe-request@@
+  The script has the form:
+
+@example
+     require ["envelope", "ereject"];
+     if not envelope :is "from" ["", the list subscribers] @{
+     ereject "BG - Ne ste abonat na @var{listname}.
+CA - No ets suscrit a la llista @var{listname}.
+DE - Sie sind kein Mitglied der Liste @var{listname}.
+EN - You, $@{envelope.from@} are not subscribed to @var{listname}.
+ES - No estas suscrito a la lista @var{listname}.
+FR - Vous n'etes pas inscrit sur la liste @var{listname}.
+IT - Non sei iscritto alla lista @var{listname}.
+LV - Tu neesi pierakstijies listei @var{listname}.
+PT - Nao esta inscrito na lista @var{listname}.
+SR - Niste pretplaceni na @var{listname}.";
+     @}
+     if not address :is ["From", "Sender", "Resent-From", "Resent-Sender"] [the list subscribers] @{
+       ereject the above message;
+     @}
+@end example
+and @var{listname} is replaced with the name of the list.
+
+@item @var{listname}-signoff-request@@
+    The script is the same as for @var{listname}-unsubscribe-request@@.
+
+@item @var{listname}-subscribe-request@@
+    If @env{Subscribe} = Closed, the script has the form:
+
+@example
+require "ereject";
+ereject "$@{envelope.from@} cannot subscribe to @var{listname}.  Contact the listowners as @var{listname}-request@@aegee.org for clarification how to join the list.\r\n$@{advertisement@}";
+@end example
+
+    Otherwise the script has the form:
+
+@example
+require "ereject";
+if header :contains "X-Spam-Level" "+++++" @{
+    reject "Your mail was evaluated as spam (see below for details). To join @var{listname} visit
+https://lists.aegee.org/cgi-bin/wa?SUBED1=@var{listname}&A=1 .
+$@{advertisement@}$@{headers.X-Aegee-Spam-Report@}";
+@}
+@end example
+
+@item @var{listname}-search-request@@
+    The script is always "".
+
+@item @var{listname}-server@@
+    The script is always "".
+
+@item owner-@var{listname}@@
+    The script has the form:
+
+@example
+    require ["ereject", "envelope"];
+    if not envelope :is "from" ["", the list subscribers] @{
+      ereject "$@{evenlope.from@} cannot post to $@{envelope.to@}.";
+    @}
+@end example
+@end table
+@end deftypefn
+@node About, GNU Free Documentation License, Functions Reference, Top
+@chapter About
+About the Author
+
+My name is Dilyan Palauzov and I am solving the SPAM problems in AEGEE for more than five years.  In 2009 this means more than 1 GB mails per day.
+
+For not-spammers, I offer at @email{liblistserv@@aegee.org} support for:
+@itemize
+@item white-listing mail servers
+@item installing and configuring Spam filters on your server,
+@item consultancy on designing newsletters, so that they are not evaluated as spam.
+@item taking legal measures agains spammers
+@item optimizng, configuring and maintaining mail servers
+@item consultancy for optimizing your internal electronic communications
+@end itemize
+
+About AEGEE
+
+AEGEE is one of Europe's largest interdisciplinary and voluntary student associations, operating without being linked to any political party, promoting a unified Europe, cross-border co-operation, communication and integration in academic environment, and at the same time striving to create an open and tolerant society by involving students and young graduates in valuable projects and discussions over the topics of importance for the communities they live in.
+
+It is represented in 260 university cities, in 42 countries all around Europe and has about 15 000 members.  For them we offer for more than ten years email services, including mailing lists.
+
+@node GNU Free Documentation License,  , About, Top
+@appendix GNU Free Documentation License
+@include fdl-1.3.texi
+
+@bye

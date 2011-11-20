@@ -1,0 +1,2 @@
+--remove ${advertisement}
+--rename X-AEGEE-Spam-Level to X-Spam-Level
