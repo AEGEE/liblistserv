@@ -1,3 +1,5 @@
+10.02.2012 Add ability to parse ******TOPICS*** and ***TOPLIST*** in the answer of QUERY ***GUI***
+
 23.02.2011 Include checks for values returned by malloc and strdup.
 
 22.02.2011 Relese 1.0.2

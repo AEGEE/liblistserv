@@ -348,6 +348,8 @@ listserv_parse_query_gui (char **string)
  ***OPT*** NOACK
 
  ***SUBDATE*** 27 Sep 2010
+ ***TOPICS*** topic
+ ***TOPLIST*** toplist
    */
   /*  pri("POST");
      pri("NOPOST");
@@ -446,7 +448,19 @@ listserv_parse_query_gui (char **string)
       l->date = NULL;
       *string = start;
     }
-  //here follow possible ***TOPICS*** and ***TOPLIST***
+  if (start[4] == 'T') { //here follow possible ***TOPICS***
+      char *end = strchr (start, '\n');
+      if (end) {
+	*string = end+1;
+      }
+  }
+  if (start[4] == 'T') { //here follow possible ***TOPLIST***
+      char *end = strchr (start, '\n');
+      if (end) {
+	*string = end+1;
+      }
+  }
+
   return l;
 }
 

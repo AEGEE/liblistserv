@@ -1,3 +1,5 @@
+10.02.2012 Add ability to parse ******TOPICS*** and ***TOPLIST*** in the answer of QUERY ***GUI***
+
 12.11.2010 Fixed bug in listserv_getsieve_scripts for lists with Send = Editor, Hold and Sublists = ...
 
 12.11.2010 Faster liblistserv_getsubscriptions, listserv_getsubscriber, listserv_getsubscribers and listserv_getsieve_scripts
