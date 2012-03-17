@@ -1,3 +1,5 @@
+17.03.2012 Bugfix: avoid stack overflow when retrieving lage listname.logXXX files
+
 10.02.2012 Add ability to parse ******TOPICS*** and ***TOPLIST*** in the answer of QUERY ***GUI***
 
 12.11.2010 Fixed bug in listserv_getsieve_scripts for lists with Send = Editor, Hold and Sublists = ...

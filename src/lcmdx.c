@@ -158,7 +158,7 @@ listserv_command (struct listserv *const l, const char *const command)
     goto Protocol_Error;
   /* Read the reply */
   len = ntohl (ibuf[1]);
-  reply = ALLOC_A (len + 1);
+  reply = malloc (len + 1);
   if (receive (ss, (char *) reply, len) <= 0)
     goto Socket_Error;
   /* Count the lines */
@@ -204,7 +204,7 @@ Done:
   FREE_A (cmd);
   if (reply)
     {
-      FREE_A (reply);
+      free (reply);
     }
   if (ss >= 0)
     {
