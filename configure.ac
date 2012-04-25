@@ -9,6 +9,7 @@ AC_CONFIG_SRCDIR([src/liblistserv.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_DEFINE([BUILDING_LIBLISTSERV], [1], [Used to hide symbols from liblistserv.h])
 AC_USE_SYSTEM_EXTENSIONS
+AM_PROG_AR
 LT_INIT([disable-static])
 dnl AC_REQUIRE(AC_CANONICAL_HOST)
 

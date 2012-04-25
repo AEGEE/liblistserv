@@ -1,3 +1,5 @@
+25.04.2012 Upgrade to Automake 1.12
+
 17.03.2012 Bugfix: avoid stack overflow when retrieving lage listname.logXXX files
 
 10.02.2012 Add ability to parse ******TOPICS*** and ***TOPLIST*** in the answer of QUERY ***GUI***
