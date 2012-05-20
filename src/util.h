@@ -24,10 +24,10 @@
 #include "src/liblistserv.h"
 #include <alloca.h>
 
-#if defined HAVE_VISIBILITY && HAVE_VISIBILITY
-#define INTERNAL inline __attribute__ ((visibility ("internal")))
+#if HAVE_VISIBILITY
+#define INTERNAL __attribute__ ((visibility ("internal")))
 #else
-#define INTERNAL inline
+#define INTERNAL
 #endif
 
 #if HAVE_ALLOCA
@@ -44,11 +44,11 @@ struct string
   unsigned int len, pos;
 };
 
-INTERNAL struct string *str_init ();
-INTERNAL void str_concat (struct string *s, const char *const str);
-INTERNAL char *str_free (struct string *s);
-INTERNAL void listserv_free_cached_content_filter (struct listserv *const l);
-INTERNAL void listserv_free_cached_char2 (struct listserv *const l);
-INTERNAL void listserv_free_keywords (struct listserv *const l);
-INTERNAL void listserv_free_cached_subscribers (struct listserv *const l);
-INTERNAL void listserv_free_char2 (char** x);
+struct string *str_init () INTERNAL;
+inline void str_concat (struct string *s, const char *const str) INTERNAL;
+inline char *str_free (struct string *s) INTERNAL;
+inline void listserv_free_cached_content_filter (struct listserv *const l) INTERNAL;
+inline void listserv_free_cached_char2 (struct listserv *const l) INTERNAL;
+inline void listserv_free_keywords (struct listserv *const l) INTERNAL;
+inline void listserv_free_cached_subscribers (struct listserv *const l) INTERNAL;
+inline void listserv_free_char2 (char** x) INTERNAL;

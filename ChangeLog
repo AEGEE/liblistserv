@@ -1,3 +1,5 @@
+20.05.2012 Fix declarations for marking external/internal functions in terms of ELF-visibility.
+
 25.04.2012 Upgrade to Automake 1.12 and add AM_PROG_AR to configure.ac on request of Automake
 
 17.03.2012 Bugfix: avoid stack overflow when retrieving lage listname.logXXX files, use malloc()/free() instead of alloca().
