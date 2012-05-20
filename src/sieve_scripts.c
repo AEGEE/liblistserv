@@ -645,13 +645,13 @@ listserv_header_build_script (struct listserv *l,
     }
   else				//if not private
     str_concat (script, size_criterion);
+  free (size_criterion);
   char *content_filter =
     listserv_content_filter_build_script (l, listname, reject, non_member);
   *reject_ = 1;
   if (content_filter)
     str_concat (script, content_filter);
   free (content_filter);
-  free (size_criterion);
   listserv_stringlist_destroy (extlists);
   //If Send =  Public,Confirm,Non-Member
   if (non_member)
@@ -774,7 +774,7 @@ listserv_signoff_request (const char *const listname,
 			  const char *const subscribers,
 			  const int extensions, const char *const reject)
 {
-  char *ret_text = "BG - Ne ste abonat na %s.\r\n\
+  static const char * const ret_text = "BG - Ne ste abonat na %s.\r\n\
 CA - No ets suscrit a la llista %s.\r\n\
 DE - Sie sind kein Mitglied der Liste %s.\r\n\
 EN - You, ${envelope.from} are not subscribed to %s.\r\n\
