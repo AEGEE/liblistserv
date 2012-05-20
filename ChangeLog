@@ -1,3 +1,5 @@
+20.05.2012 move liblistserv_stringlist_ functions from src/sieve_scripts.c to src/stringlist.c
+
 20.05.2012 Fix declarations for marking external/internal functions in terms of ELF-visibility.
 
 25.04.2012 Upgrade to Automake 1.12 and add AM_PROG_AR to configure.ac on request of Automake
