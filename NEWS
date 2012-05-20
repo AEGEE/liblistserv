@@ -1,3 +1,5 @@
+20.05.2012 Bugfix: there was a problem generating sieve scripts for list without subscribers and Send = Private.
+
 25.04.2012 Upgrade to Automake 1.12
 
 17.03.2012 Bugfix: avoid stack overflow when retrieving lage listname.logXXX files

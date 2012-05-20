@@ -494,36 +494,41 @@ listserv_header_build_script (struct listserv *l,
 	  str_concat (script, "\";\r\n    stop;\r\n}\r\n");
 	}
       str_concat (script, size_criterion);
-      str_concat (script, "if not ");
-      if (posting_subs[0])
+      if (posting_subs[0] || extlists->num_elements)
 	{
-	  if (extlists->num_elements)
-	    str_concat (script, "anyof ( ");
-	  str_concat (script,
-		      "address [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
-	  str_concat (script, posting_subs);
-	  str_concat (script, "]");
-	  if (extlists->num_elements)
-	    str_concat (script, ",\r\n              ");
-	}
-      if (extlists->num_elements)
-	{
-	  str_concat (script,
-		      "address :list [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
-	  *extlist = 1;
-	  str_concat (script, posting_extl);
-	  str_concat (script, "]");
+	  str_concat (script, "if not ");
 	  if (posting_subs[0])
-	    str_concat (script, ")");
+	    {
+	      if (extlists->num_elements)
+		str_concat (script, "anyof ( ");
+	      str_concat (script,
+			  "address [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
+	      str_concat (script, posting_subs);
+	      str_concat (script, "]");
+	      if (extlists->num_elements)
+		str_concat (script, ",\r\n              ");
+	    }
+	  if (extlists->num_elements)
+	    {
+	      str_concat (script,
+			  "address :list [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
+	      *extlist = 1;
+	      str_concat (script, posting_extl);
+	      str_concat (script, "]");
+	      if (posting_subs[0])
+		str_concat (script, ")");
+	    }
+	  str_concat (script, " {\r\n    ");
 	}
-      str_concat (script, " {\r\n    ");
       str_concat (script, reject);
       *reject_ = 1;
       str_concat (script, " \"");
       str_concat (script,
 		  listserv_getmail_template (l, listname,
 					     "SIEVE_CANNOT_POST_MIME_MSG"));
-      str_concat (script, "\";\r\n    stop;\r\n}\r\n");
+      str_concat (script, "\";\r\n    stop;\r\n");
+      if (posting_subs[0] || extlists->num_elements)
+	str_concat (script, "}\r\n");
     }
   else				//if not private
     str_concat (script, size_criterion);

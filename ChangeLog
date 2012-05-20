@@ -1,3 +1,5 @@
+20.05.2012 fix a problem with generated scripts, that had no subscribers and Send = Private.  The generated scripts for sucht lists were syntactically incorrect.
+
 20.05.2012 move liblistserv_stringlist_ functions from src/sieve_scripts.c to src/stringlist.c
 
 20.05.2012 Fix declarations for marking external/internal functions in terms of ELF-visibility.
