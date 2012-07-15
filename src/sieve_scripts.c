@@ -870,6 +870,7 @@ listserv_getsieve_scripts (struct listserv *const l,
   else
     reject = "";
   char envelope = 0, extlist = 0, reject_ = 0;
+  int include = (extensions & 64) ? 1 : 0;
   char *list_header = listserv_header_build_script (l, listname,
 						    extensions, reject, 
 						    &envelope, &extlist,
@@ -881,31 +882,36 @@ listserv_getsieve_scripts (struct listserv *const l,
 	str_concat (temp, "require \"ihave\";\r\n\r\n");
       else
 	{
-	  if (envelope || extlist || reject_) {
+	  if (envelope || extlist || reject_ || include) {
 	    str_concat (temp, "require ");
-	    if (envelope + extlist + reject_ > 1)
+	    if (envelope + extlist + reject_ + include > 1)
 	      str_concat(temp, "[");
 	    if (envelope) {
-	      str_concat(temp, "\"envelope\""); 
-	      if (extlist || reject_)
+	      str_concat(temp, "\"envelope\"");
+	      if (extlist || reject_ || include)
 		str_concat(temp, ", ");
 	    }
 	    if (extlist) {
 	      str_concat(temp, "\"extlists\"");
-	      if (reject_)
+	      if (reject_ || include)
 		str_concat(temp, ", ");
 	    }
 	    if (reject_) {
 	      str_concat(temp, "\"");
 	      str_concat(temp, reject);
 	      str_concat(temp, "\"");
+	      if (include)
+		str_concat(temp, ", ");
 	    }
-	    if (envelope + extlist + reject_ > 1)
+	    if (include)
+	      str_concat(temp, "\"include\"");
+	    if (extlist + reject_ + include + envelope > 1)
 	      str_concat(temp, "]");
-	    if (envelope || extlist || reject_)
-	      str_concat(temp, ";\r\n\r\n");
+	    str_concat(temp, ";\r\n\r\n");
 	  }
 	}
+      if (include)
+	str_concat (temp, "include \"plus.siv\";\r\n\r\n");
       str_concat (temp, list_header);
       free (list_header);
     };

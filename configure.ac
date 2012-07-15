@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([liblistserv],[1.0.2],[liblistserv@aegee.org])
+AC_INIT([liblistserv],[1.0.4],[liblistserv@aegee.org])
 AM_INIT_AUTOMAKE([dist-bzip2 -Wall subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/liblistserv.c])

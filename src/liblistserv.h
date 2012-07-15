@@ -138,6 +138,7 @@ enum listserv_content_filter_actions { REJECT = 'R', ALLOW = 'A',
  *    0000 0000 0000 1000 |    8  extension extlists
  *    0000 0000 0001 0000 |   16  extension variables 
  *    0000 0000 0010 0000 |   32  extension ihave
+ *    0000 0000 0100 0000 |   64  extension include
  *    0100 0000 0000 0000 | 4096  without size
  */
   extern LIBLISTSERV_API char **listserv_getsieve_scripts (struct listserv *,

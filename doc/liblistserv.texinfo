@@ -629,9 +629,12 @@ Apart from rejecting emails, that will be anyway bounced by listserv, some more 
     8  extension extlists
    16  extension variables  /* for future use, not implemented */
    32  extension/test ihave /* for future use, not implemented */
+   32  extension/action include
  4096  without size
 @end example
 When both 2 = reject and 4 = ereject are available, the scripts contain only ereject.
+
+When 32 = include is enabled, then `include "plus.siv";` is inserted at the beginning of the generated script for the list.
 
 If the provided @var{extensions} are not sufficient to build any script, listserv_getsieve_scripts returns an array with one value (NULL).
 
