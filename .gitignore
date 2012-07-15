@@ -19,6 +19,7 @@ doc/liblistserv.info
 doc/stamp-vti
 doc/version.texi
 install-sh
+INSTALL
 ltmain.sh
 m4/
 mdate-sh
