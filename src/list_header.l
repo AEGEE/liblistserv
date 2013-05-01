@@ -61,7 +61,7 @@ struct listserv_header_extra_type {
 <COMMENTLINE>.*\n                            {
   YY_EXTRA_TYPE yy_extra = yyget_extra (yyscanner);
   if (yy_extra->has_list_already_title == 0 && yytext[1]) {
-      int i = 1;
+      unsigned int i = 1;
       while (yytext[i] && yytext[i] != '\n' 
              && (yytext[i] == ' ' || yytext[i] == 9)) i++;//9 is TAB
       if (i != yyleng) {//found non-blank character
