@@ -1,4 +1,3 @@
-ACLOCAL_AMFLAGS			= -I m4
 AM_LFLAGS	= -s -olex.yy.c
 AM_CPPFLAGS	= -DSYSCONFDIR='"${sysconfdir}"' -I${top_builddir}/src/gnulib -I${top_srcdir}/src/gnulib
 AM_CFLAGS	= -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable ${CFLAG_VISIBILITY}
