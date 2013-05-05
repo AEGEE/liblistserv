@@ -2,14 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct listserv_stringlist
-{
-  int num_elements;
-  char **elements;
-  char *string_presentation;
-  int total_length_of_elements;
-  int size_for_elements;
-};
+#include "src/stringlist.h"
 
 struct listserv_stringlist *
 listserv_stringlist_init ()
