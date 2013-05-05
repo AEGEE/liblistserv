@@ -202,25 +202,12 @@ insert_emails_from (struct listserv *l,
 	}
 	listserv_free_char2(temp);
       }
-				//insert all subscribers from list
-      if (extensions & 8)
-	{			//provided that extlists is supported
-	  temp = ALLOC_A (strlen (listname) + 10);
-	  sprintf (temp, "listserv:%s", listname);
-	  listserv_stringlist_add (extlists, temp);
-	  FREE_A (temp);
-	}
-      else
-	{			//no extlists support
-	  struct listserv_subscriber **ls =
-	    listserv_getsubscribers (l, listname);
-	  j = 0;
-	  while (ls[j])
-	    {
-	      listserv_stringlist_add (emails, ls[j]->email);
-	      j++;
-	    }
-	}
+      //insert all subscribers from list
+      struct listserv_subscriber **ls =
+	listserv_getsubscribers (l, listname);
+      if (ls[0])
+      for (int m = 0; ls[m]; m++)
+	  listserv_stringlist_add (emails, ls[m]->email);
       return;
     }
   char **keywords = listserv_getlist_keyword (l, listname, keyword);
@@ -249,25 +236,12 @@ insert_emails_from (struct listserv *l,
 		temp++;
 	      if (temp[0])
 		temp[0] = '\0';
-	      if (extensions & 8)
-		{		//supports external lists
-		  temp = ALLOC_A (strlen (kw) + strlen (list) + 11);
-		  if (kw[0])
-		    sprintf (temp, "listserv:%s|%s", list, kw);
-		  else
-		    sprintf (temp, "listserv:%s", list);
-		  listserv_stringlist_add (extlists, temp);
-		  FREE_A (temp);
-		}
-	      else
-		{		//does not support external lists
-		  if (strcasecmp (kw, "Owners") == 0)
-		    kw[5] = '\0';
-		  insert_emails_from (l, list, kw, emails,
-				      extlists, loop_protection,
-				      extensions);
-		  keywords = listserv_getlist_keyword (l, listname, keyword);
-		}
+	      if (strcasecmp (kw, "Owners") == 0)
+		kw[5] = '\0';
+	      insert_emails_from (l, list, kw, emails,
+				  extlists, loop_protection,
+				  extensions);
+	      keywords = listserv_getlist_keyword (l, listname, keyword);
 	      free (kw);
 	    }
 	  else if (strcasecmp (keywords[j - 1], "quiet:") == 0
@@ -357,201 +331,102 @@ listserv_header_build_script (struct listserv *l,
 			      const char *const reject,
 			      char *envelope, char *extlist, char *reject_)
 {
-  char private = 1, explicit_private = 0, non_member = 0, hold = 0;
-  int j = 0;
+  char editor = 0, hold = 0, non_member = 0, public = 0;
+  char **keyword = listserv_getlist_keyword (l, listname, "Send");
+  for (int j = 0; keyword[j]; j++)
+    if (strcasecmp (keyword[j], "Public") == 0) public = 1;
+    else if (strcasecmp (keyword[j], "Hold") == 0) hold = 1;
+    else if (strcasecmp (keyword[j], "Non-Member") == 0) non_member = 1;
+    else if (strcasecmp (keyword[j], "Editor") == 0) editor =1;
+
+  // LOGIC
+  // if (public == 1 || (editor == 1 && hold == 0)
+  //    then everybody can post
+  // else {
+  //      only emails from  addresses, that receive emails from the list,
+  //           are accepted + emails from editors and moderators
+  // }
+  struct string *script = str_init ();
+  str_concat (script, "# Generated from List Header\r\n");
   char *size_criterion = listserv_size_criterion (l, listname,
 						  extensions, reject);
-  char **keyword = listserv_getlist_keyword (l, listname, "Send");
-  while (keyword[j++])
-    if (strcasecmp (keyword[j - 1], "Public") == 0)
-      private = 0;
-    else if (strcasecmp (keyword[j - 1], "Non-Member") == 0)
-      {
-	private = 0;
-	non_member = 1;
-	break;
-      }
-    else if (strcasecmp (keyword[j - 1], "Hold") == 0) 
-      {
-	explicit_private = 1;
-	hold = 1;
-      }
-    else if (strcasecmp (keyword[j - 1], "Private") == 0)
-      explicit_private = 1;
-  struct listserv_stringlist *posting_subscribers =
-    listserv_stringlist_init (),
-    //subscribers of which lists can post
-    *extlists = listserv_stringlist_init ();
-  if (private || non_member)
-    {
-      if (l->subscribers[0])
-	{
-	  j = 0;
-	  while (l->subscribers[j])
-	    if (!(l->subscribers[j++]->options & 0x01))
-	      listserv_stringlist_add (posting_subscribers,
-				       l->subscribers[j - 1]->email);
-	}
-    }
-  struct listserv_stringlist *loop = listserv_stringlist_init ();
-  insert_emails_from (l, listname, "Configuration-Owner",
-		      posting_subscribers, extlists,
-		      loop, extensions | 4096);
-  insert_emails_from (l, listname, "Editor",
-		      posting_subscribers, extlists,
-		      loop, extensions | 4096);
-  insert_emails_from (l, listname, "Moderator",
-		      posting_subscribers, extlists,
-		      loop, extensions | 4096);
-  insert_emails_from (l, listname, "Owner",
-		      posting_subscribers, extlists,
-		      loop, extensions | 4096);
-  insert_emails_from (l, listname, "Send",
-		      posting_subscribers, extlists,
-		      loop, extensions | 4096);
-  if (hold) {
-    keyword = listserv_getlist_keyword (l, listname, "Sub-Lists");
-    if (keyword[0])
-      {
-	char **temp = listserv_duplicate_char2(keyword);
-	j = 0;
-	while (temp[j])
-	  {
-	    insert_emails_from (l, temp[j], "",
-				posting_subscribers, extlists,
-				loop, extensions);
-	    j++;
-	  }
-	listserv_free_char2(temp);
-      }
-  }
-  listserv_stringlist_destroy (loop);
-  struct string *script = str_init ();
-  if (private)
-    {
-      char *posting_subs = listserv_stringlist_string (posting_subscribers);
-      char *posting_extl = listserv_stringlist_string (extlists);
-      str_concat (script, "# Generated from List Header\r\n");
-      if (extensions & 1)
-	{
-	  str_concat (script, "if not ");
-	  if (posting_subs[0])
-	    {
-	      if (extlists->num_elements)
-		str_concat (script, "anyof ( ");
-	      str_concat (script, "envelope \"from\" [\"\", ");
-	      *envelope = 1;
-	      str_concat (script, posting_subs);
-	      str_concat (script, "]");
-	      if (extlists->num_elements)
-		str_concat (script, ",\r\n              ");
-	    }
-	  if (extlists->num_elements)
-	    {
-	      str_concat (script, "envelope :list \"from\" [");
-	      *extlist = 1;
-	      *envelope = 1;
-	      str_concat (script, posting_extl);
-	      str_concat (script, "]");
-	      if (posting_subs[0])
-		str_concat (script, ")");
-	    }
-	  str_concat (script, " {\r\n    ");
-	  str_concat (script, reject);
-	  *reject_ = 1;
-	  str_concat (script, " \"");
-	  str_concat (script,
-		      listserv_getmail_template (l, listname,
-						 "SIEVE_CANNOT_POST_ENVELOPE_MSG"));
-	  str_concat (script, "\";\r\n    stop;\r\n}\r\n");
-	}
-      str_concat (script, size_criterion);
-      if (posting_subs[0] || extlists->num_elements)
-	{
-	  str_concat (script, "if not ");
-	  if (posting_subs[0])
-	    {
-	      if (extlists->num_elements)
-		str_concat (script, "anyof ( ");
-	      str_concat (script,
-			  "address [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
-	      str_concat (script, posting_subs);
-	      str_concat (script, "]");
-	      if (extlists->num_elements)
-		str_concat (script, ",\r\n              ");
-	    }
-	  if (extlists->num_elements)
-	    {
-	      str_concat (script,
-			  "address :list [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
-	      *extlist = 1;
-	      str_concat (script, posting_extl);
-	      str_concat (script, "]");
-	      if (posting_subs[0])
-		str_concat (script, ")");
-	    }
-	  str_concat (script, " {\r\n    ");
-	}
-      str_concat (script, reject);
-      *reject_ = 1;
-      str_concat (script, " \"");
-      str_concat (script,
-		  listserv_getmail_template (l, listname,
-					     "SIEVE_CANNOT_POST_MIME_MSG"));
-      str_concat (script, "\";\r\n    stop;\r\n");
-      if (posting_subs[0] || extlists->num_elements)
-	str_concat (script, "}\r\n");
-    }
-  else				//if not private
+  if (public == 1 || (editor == 1 && hold == 0))
     str_concat (script, size_criterion);
+  else {
+    struct listserv_stringlist
+      *posting_subscribers = listserv_stringlist_init (),
+      *extlists = listserv_stringlist_init ();
+    if (l->subscribers[0])
+      for (int n = 0; l->subscribers[n]; n++)
+	  if (!(l->subscribers[n]->options & 0x01))
+	    listserv_stringlist_add (posting_subscribers,
+				     l->subscribers[n]->email);
+
+    struct listserv_stringlist *loop = listserv_stringlist_init ();
+    insert_emails_from (l, listname, "Configuration-Owner",
+			posting_subscribers, extlists, loop, extensions|4096);
+    insert_emails_from (l, listname, "Editor",
+			posting_subscribers, extlists, loop, extensions|4096);
+    insert_emails_from (l, listname, "Moderator",
+			posting_subscribers, extlists, loop, extensions|4096);
+    insert_emails_from (l, listname, "Owner",
+			posting_subscribers, extlists, loop, extensions|4096);
+    insert_emails_from (l, listname, "Send",
+			posting_subscribers, extlists, loop, extensions|4096);
+
+    if (editor == 1 && hold == 1) {
+      keyword = listserv_getlist_keyword (l, listname, "Sub-Lists");
+      if (keyword[0])
+	{
+	  char **temp = listserv_duplicate_char2(keyword);
+	  for (int m = 0; temp[m]; m++)
+	    insert_emails_from (l, temp[m], "", posting_subscribers, extlists,
+				loop, extensions);
+	  listserv_free_char2(temp);
+	}
+    }
+    listserv_stringlist_destroy (loop);
+    listserv_stringlist_destroy (extlists);
+
+    char *posting_subs = listserv_stringlist_string (posting_subscribers);
+    if ((extensions & 1) && posting_subs[0])
+      {
+	str_concat (script, "if not envelope \"from\" [\"\", ");
+	*envelope = 1;
+	str_concat (script, posting_subs);
+	str_concat (script, "] {\r\n    ");
+	str_concat (script, reject);
+	str_concat (script, " \"");
+	str_concat (script, listserv_getmail_template (l, listname,
+				       "SIEVE_CANNOT_POST_ENVELOPE_MSG"));
+	str_concat (script, "\";\r\n    stop;\r\n}\r\n");
+      }
+
+    str_concat (script, size_criterion);
+
+    if (posting_subs[0])
+      {
+	str_concat (script, "if not address [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
+	str_concat (script, posting_subs);
+	str_concat (script, "] {\r\n    ");
+	str_concat (script, reject);
+	*reject_ = 1;
+	str_concat (script, " \"");
+	str_concat (script, listserv_getmail_template (l, listname,
+					       "SIEVE_CANNOT_POST_MIME_MSG"));
+	str_concat (script, "\";\r\n    stop;\r\n}\r\n");
+	}
+    listserv_stringlist_destroy (posting_subscribers);
+  }
   free (size_criterion);
+
   char *content_filter =
     listserv_content_filter_build_script (l, listname, reject, non_member);
-  *reject_ = 1;
-  if (content_filter)
+  if (content_filter) {
+    *reject_ = 1;
     str_concat (script, content_filter);
-  free (content_filter);
-  listserv_stringlist_destroy (extlists);
-  //If Send =  Public,Confirm,Non-Member
-  if (non_member)
-    {
-      str_concat (script, "# Non-Member\r\n");
-      str_concat (script,
-		  "if not address [\"From\", \"Sender\", \"Resent-From\", \"Resent-Sender\"] [");
-      str_concat (script, listserv_stringlist_string (posting_subscribers));
-      str_concat (script, "] {\r\n");
-
-      struct listserv_stringlist *emails = listserv_stringlist_init ();
-      struct listserv_stringlist *elists = listserv_stringlist_init ();
-      struct listserv_stringlist *loop = listserv_stringlist_init ();
-      insert_emails_from (l, listname, "Editor",
-			  emails, elists, loop, extensions);
-      insert_emails_from (l, listname, "Moderator",
-			  emails, elists, loop, extensions);
-      listserv_stringlist_destroy (loop);
-
-      j = 0;
-      while (j < emails->num_elements)
-	{
-	  str_concat (script, "    redirect \"");
-	  str_concat (script, emails->elements[j]);
-	  str_concat (script, "\";\r\n");
-	  j++;
-	}
-      listserv_stringlist_destroy(emails);
-
-      j = 0;
-      while (j < elists->num_elements)
-	{
-	  str_concat (script, " redirect \"");
-	  str_concat (script, elists->elements[j]);
-	  str_concat (script, "\";\r\n");
-	  j++;
-	}
-      listserv_stringlist_destroy(elists);
-      str_concat (script, "}\r\n");
-    }
-  listserv_stringlist_destroy (posting_subscribers);
+    free (content_filter);
+  }
   return str_free (script);
 }
 
