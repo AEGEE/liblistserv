@@ -45,11 +45,11 @@ struct string
 };
 
 struct string *str_init () INTERNAL;
-inline void str_concat (struct string *s, const char *const str) INTERNAL;
-inline char *str_free (struct string *s) INTERNAL;
-inline void listserv_free_cached_content_filter (struct listserv *const l) INTERNAL;
-inline void listserv_free_cached_char2 (struct listserv *const l) INTERNAL;
-inline void listserv_free_keywords (struct listserv *const l) INTERNAL;
-inline void listserv_free_cached_subscribers (struct listserv *const l) INTERNAL;
-inline void listserv_free_char2 (char** x) INTERNAL;
+void str_concat (struct string *s, const char *const str) INTERNAL;
+char *str_free (struct string *s) INTERNAL;
+void listserv_free_cached_content_filter (struct listserv *const l) INTERNAL;
+void listserv_free_cached_char2 (struct listserv *const l) INTERNAL;
+void listserv_free_keywords (struct listserv *const l) INTERNAL;
+void listserv_free_cached_subscribers (struct listserv *const l) INTERNAL;
+void listserv_free_char2 (char** x) INTERNAL;
 char** listserv_duplicate_char2(char**) INTERNAL;

@@ -14,7 +14,7 @@ LT_INIT([disable-static])
 dnl AC_REQUIRE(AC_CANONICAL_HOST)
 
 # Checks for programs.
-AC_PROG_CC
+AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_LEX
 AM_PROG_CC_C_O

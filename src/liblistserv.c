@@ -73,10 +73,10 @@ listserv_init (const char *const email, const char *const password,
 	    }
 	  FREE_A (filename);
 	}
-      fscanf (f, "%as", &ret->email);
-      fscanf (f, "%as", &ret->password);
+      fscanf (f, "%ms", &ret->email);
+      fscanf (f, "%ms", &ret->password);
       char *x;
-      fscanf (f, "%as", &x);
+      fscanf (f, "%ms", &x);
       if (x)
 	{
 	  free (_host);
@@ -566,7 +566,7 @@ listserv_getowned_lists (struct listserv *const l)
     {
       if (!lists[1])
 	break;
-      sscanf (lists, "%as", &lists_owned);
+      sscanf (lists, "%ms", &lists_owned);
       l->cached_owned_lists[num_lists++] = lists_owned;
       lists++;
     }
