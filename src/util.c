@@ -36,6 +36,21 @@ listserv_free_char2(char **x)
   free(x);
 }
 
+inline char**
+listserv_duplicate_char2(char** x)
+{
+  int i = 0;
+  while (x[i]) i++;
+  char **ret = malloc(sizeof(char*) * (i+1));
+  i = 0;
+  while (x[i]) {
+    ret[i] = strdup(x[i]);
+    i++;
+  }
+  ret[i] = NULL;
+  return ret;
+}
+
 inline struct string *
 str_init ()
 {

@@ -39,22 +39,6 @@ void listserv_stringlist_add (struct listserv_stringlist *const sl, char *text);
 char *listserv_stringlist_string (struct listserv_stringlist *const sl);
 void listserv_stringlist_destroy (struct listserv_stringlist *sl);
 
-static inline char**
-listserv_duplicate_char2(char** x)
-{
-  int i = 0;
-  while (x[i]) i++;
-  char **ret = malloc(sizeof(char*) * (i+1));
-  i = 0;
-  while (x[i]) {
-    ret[i] = strdup(x[i]);
-    i++;
-  }
-  ret[i] = NULL;
-  return ret;
-}
-
-
 static inline int
 keyword_doesnot_contain (struct listserv *l, const char const * listname, 
 			 const char const *keyword,
