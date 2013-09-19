@@ -102,8 +102,7 @@ enum listserv_content_filter_actions { REJECT = 'R', ALLOW = 'A',
   extern LIBLISTSERV_API char *listserv_getmail_template (struct listserv *,
 							  const char
 							  *listname,
-							  const char
-							  *template);
+							  const char*);
   extern LIBLISTSERV_API struct listserv_subscriber
     *listserv_getsubscriber (struct listserv *, const char *listname,
 			     const char *email);

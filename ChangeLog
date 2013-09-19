@@ -1,3 +1,5 @@
+19.09.2013 Remove the word template from liblilistserv.h, so that file can be included in C++ code.
+
 20.05.2012 Update Copyright in m4/gnulib-cache.m4 from 2011 to 2012
 
 20.05.2012 fix a problem with generated scripts, that had no subscribers and Send = Private.  The generated scripts for sucht lists were syntactically incorrect.
