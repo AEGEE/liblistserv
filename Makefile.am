@@ -8,7 +8,7 @@ pkgconfig_DATA			= liblistserv.pc
 noinst_PROGRAMS			= src/demo
 SUBDIRS				= src/gnulib
 
-info_TEXINFOS			= doc/liblistserv.texinfo
+info_TEXINFOS			= doc/liblistserv.texi
 doc_liblistserv_TEXINFOS	= doc/fdl-1.3.texi
 
 lib_LTLIBRARIES			= src/liblistserv.la
