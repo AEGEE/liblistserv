@@ -1,3 +1,4 @@
+19.09.2013 Move gnulib directory from src/gnulib/ to lib/
 19.09.2013 Remove the word template from liblilistserv.h, so that file can be included in C++ code.
 
 20.05.2012 Update Copyright in m4/gnulib-cache.m4 from 2011 to 2012

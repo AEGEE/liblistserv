@@ -27,7 +27,7 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=src/gnulib --m4-base=m4 --doc-base=doc --tests-base=tests --aux-dir=. --no-conditional-dependencies --libtool --macro-prefix=gl alloca-opt close fclose fopen getaddrinfo lib-symbol-visibility memchr recv send socket stpcpy strcasestr strstr
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=doc --tests-base=tests --aux-dir=. --no-conditional-dependencies --libtool --macro-prefix=gl alloca-opt close fclose fopen getaddrinfo lib-symbol-visibility memchr recv send socket stpcpy strcasestr strstr
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
@@ -47,7 +47,7 @@ gl_MODULES([
   strstr
 ])
 gl_AVOID([])
-gl_SOURCE_BASE([src/gnulib])
+gl_SOURCE_BASE([lib])
 gl_M4_BASE([m4])
 gl_PO_BASE([])
 gl_DOC_BASE([doc])
@@ -57,4 +57,4 @@ gl_MAKEFILE_NAME([])
 gl_LIBTOOL
 gl_MACRO_PREFIX([gl])
 gl_PO_DOMAIN([])
-gl_WITNESS_C_DOMAIN([])
+gl_WITNESS_C_MACRO([])

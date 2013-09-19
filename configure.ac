@@ -26,5 +26,5 @@ AC_FUNC_MALLOC
 AC_HEADER_STDC
 AC_CONFIG_HEADERS([config.h])
 gl_INIT
-AC_CONFIG_FILES([Makefile liblistserv.pc src/gnulib/Makefile])
+AC_CONFIG_FILES([Makefile liblistserv.pc lib/Makefile])
 AC_OUTPUT
