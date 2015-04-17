@@ -586,11 +586,11 @@ char** listserv_list_filelist (struct listserv *const l,
   l->cached_char2 = malloc (100 * sizeof(char**));
   while (filelist) {
     if (filelist[0] == '*' || (filelist[0] == '\n' && filelist[1] == '\n')) {
-      filelist = strchr(filelist+1, '\n');
+      filelist = strchr (filelist + 1, '\n');
       if (filelist) filelist++;
+      if (filelist && filelist[0] == '\n' ) filelist++;
       continue;
     }
-
     if (filelist == NULL) break;
     char t1[100], t2[100];
     sscanf(filelist, "%s %s", t1, t2);
