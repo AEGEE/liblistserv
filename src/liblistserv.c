@@ -305,7 +305,7 @@ listserv_getmail_template (struct listserv *const l,
   free (l->cached_command);
   l->cached_command = listserv_parse_template (ret);
   //  printf("LIST %s TEMPLATE %s=%s=\n", listname, template, ret);
-  return ret;
+  return strstr(ret, ".CS UTF-8\n") == ret ? ret + 10 : ret;
 }
 
 #define option_number(x)   (((tolower(x[0]) - 65) << 10) + ((tolower(x[2]) - 65) << 5) + (tolower(x[3]) - 65))
