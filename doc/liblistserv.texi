@@ -211,7 +211,7 @@ root@@aegee.org MYPASSWORD listserv.example.int:2306
 is freed at the next call of one of these functions or @code{listserv_getsieve_scripts}.
 @item listserv_content_filter
 is valid until subsequent call of the same function or @code{listserv_getsieve_scripts}.
-@itemx listserv_getowned_lists
+@item listserv_getowned_lists
 is valid until listserv_shutdown is called.
 @item listserv_getsieve_scripts
 is valid until subsequent call of the same function.
