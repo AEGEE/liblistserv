@@ -78,7 +78,6 @@ enum listserv_content_filter_actions { REJECT = 'R', ALLOW = 'A',
   {
     char *email;
     char *password;
-    char filesystem_hack;
     struct addrinfo *addrres;
     int port;
     struct listserv_subscriber **subscribers;

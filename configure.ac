@@ -12,7 +12,10 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_AR
 LT_INIT([disable-static])
 dnl AC_REQUIRE(AC_CANONICAL_HOST)
-
+AC_ARG_WITH(filesystem, AS_HELP_STRING([--with-filesystem=/home/listserv],
+  [bypass Listserv for some actions and access directly the files from the filesystem.  Default is disabled. dir is where Listserv is installed]),
+	[ if test "$withval" == "yes"; then withval="/home/listserv"; fi
+	  AC_DEFINE_UNQUOTED([LISTSERV_PATH], "$withval", [Whether liblistserv shall prefer the filesystem over TCPGUI])])
 # Checks for programs.
 AC_PROG_CC_C99
 gl_EARLY

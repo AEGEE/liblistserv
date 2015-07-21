@@ -28,7 +28,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
+#ifdef LISTSERV_PATH
+
+#include <dirent.h>
+static int SELECTOR_LOG (const struct dirent* filename) {
+  return (strstr (filename->d_name, ".log") != NULL)
+    || (strstr (filename->d_name, ".notebook") != NULL);
+}
+
+static int SELECTOR_CHANGELOG (const struct dirent* filename) {
+  return strstr (filename->d_name, ".changelog") != NULL;
+}
+
+static int listserv_log_sort (const struct dirent** a, const struct dirent** b) {
+  const int pointA = strstr ((*a)->d_name, ".log") - (*a)->d_name + 4;
+  if (pointA > 0) {
+    if (strlen ((*a)->d_name) - strlen ((*b)->d_name))
+      return alphasort (a, b);
+    if (strstr ((*b)->d_name, ".log") == NULL)
+      return -1;
+    if (
+	(*a)->d_name[pointA]== '9'
+	&& (*b)->d_name[pointA] != '9') return -1;
+    if (
+	(*a)->d_name[pointA]!= '9'
+	&& (*b)->d_name[pointA] == '9') return 1;
+  }
+  return alphasort (a, b);
+}
+#endif
 
 struct listserv *
 listserv_init (const char *const email, const char *const password,
@@ -38,8 +68,7 @@ listserv_init (const char *const email, const char *const password,
   struct listserv *ret = malloc (sizeof (struct listserv));
   if (ret == NULL) return NULL;
   memset (ret, 0, sizeof (struct listserv));
-  ret->filesystem_hack = 1;
-  char *_host = strdup (host ? strdup(host) : "localhost");
+  char *_host = strdup (host ? strdup (host) : "localhost");
   if (_host == NULL) {
     free (ret);
     return NULL;
@@ -103,7 +132,7 @@ listserv_init (const char *const email, const char *const password,
   return ret;
 }
 
-void listserv_destroy(struct listserv *l)
+void listserv_destroy (struct listserv *l)
 {
   listserv_shutdown (l);
 }
@@ -112,7 +141,7 @@ void
 listserv_shutdown (struct listserv *l)
 {
   free (l->cached_command);
-  if (l->cached_file_name ) {
+  if (l->cached_file_name) {
     free(l->cached_file_name);
     int i = 0;
     while (l->cached_files[i])
@@ -216,7 +245,7 @@ listserv_parse_template (char* template)
   if (template[0] == '.' 
       && template[1] == 'C'
       && template[2] == 'S') {
-    char *t = strdup(strchr(template, '\n') + 1);
+    char *t = strdup (strchr (template, '\n') + 1);
     free(template);
     return t;
   } else
@@ -225,18 +254,27 @@ listserv_parse_template (char* template)
 
 static char* load_file (const char *filename)
 {
-  char *path = malloc(strlen(filename)+21);
-  sprintf(path, "/home/listserv/%s", filename);
-  FILE* f = fopen(path, "r");
-  free(path);
-  if (!f) return NULL;
+#ifdef LISTSERV_PATH
+  char *path = ALLOC_A (strlen (filename) + strlen (LISTSERV_PATH) + 1);
+  sprintf (path, "%s/%s", LISTSERV_PATH, filename);
+#else
+  char *path = ALLOC_A (strlen (filename) + 21);
+  sprintf (path, "/home/listserv/%s", filename);
+#endif
+  int fd = open (path, O_RDONLY | O_NOATIME, 0);
+  FREE_A (path);
+  if (fd == -1) return strdup ("");
   struct stat sb;
-  int filenum = fileno (f);
-  fstat (filenum, &sb);
-  char *ret = malloc(sb.st_size + 1);
-  read (filenum, ret, sb.st_size);
+
+  fstat (fd, &sb);
+  if (sb.st_size == 0) {
+    close (fd);
+    return strdup ("");
+  }
+  char *ret = malloc (sb.st_size + 1);
+  read (fd, ret, sb.st_size);
   ret[sb.st_size] = '\0';
-  fclose (f);
+  close (fd);
   return ret;
 }
 
@@ -254,33 +292,19 @@ listserv_getmail_template (struct listserv *const l,
       if (query == NULL)
 	{
 	  if (l->mailtpl_site == NULL)
-	    {
-	      if (l->filesystem_hack == 1) {
-		l->mailtpl_site = load_file("home/site.mailtpl");
-	      }
-	      if (l->mailtpl_site == NULL)
-		l->mailtpl_site = listserv_command (l, "GET site.mailtpl (MSG");
-	      l->cached_command = NULL;
-	    }
+	    //	      l->mailtpl_site = listserv_get (l, "site", "mailtpl");
+	    l->mailtpl_site = load_file ("/home/site.mailtpl");
 	  if ((query = (char *) strcasestr (l->mailtpl_site,
 					    searched_string)) == 0)
 	    {
 	      if (l->mailtpl_default == NULL)
-		{
-		  if (l->filesystem_hack == 1) {
-		    l->mailtpl_default = load_file("home/default.mailtpl");
-		  }
-		  if (l->mailtpl_default == NULL)
-		    l->mailtpl_default =
-		      listserv_command (l, "GET default.mailtpl (MSG");
-		  l->cached_command = NULL;
-		}
+		//		  l->mailtpl_default = listserv_get (l, "default", "mailtpl");
+		l->mailtpl_default = load_file ("/home/detault.mailtpl");
 	      if ((query = (char *) strcasestr (l->mailtpl_default,
 						searched_string)) == 0)
 		{
 		  FREE_A (searched_string);
-		  l->cached_command = strdup("");
-		  return l->cached_command;
+		  return l->cached_command = strdup ("");
 		}
 	    }
 	}
@@ -478,9 +502,8 @@ listserv_getsubscriber (struct listserv *const l,
   if (l)
     {
       l->subscribers = malloc (2 * sizeof (struct listserv_subscriber *));
-      l->subscribers[0] = s;
       l->subscribers[1] = NULL;
-      return l->subscribers[0];
+      return l->subscribers[0] = s;
     }
   else				//  if (cmd[0] == 'Y' || cmd[0] == 'T') {
     return NULL;
@@ -580,28 +603,86 @@ char** listserv_list_filelist (struct listserv *const l,
 			       const char *const listname)
 {
   listserv_free_cached_char2 (l);
-  char *filelist = listserv_get (l, listname, "FILELIST");
   int char2_len = 100;
   int char2_pos = 0;
-  l->cached_char2 = malloc (100 * sizeof(char**));
-  while (filelist) {
-    if (filelist[0] == '*' || (filelist[0] == '\n' && filelist[1] == '\n')) {
-      filelist = strchr (filelist + 1, '\n');
-      if (filelist) filelist++;
-      if (filelist && filelist[0] == '\n' ) filelist++;
+  l->cached_char2 = malloc (100 * sizeof (char**));
+#ifdef LISTSERV_PATH
+  struct dirent ** files;
+  char* listname_ = ALLOC_A (strlen (listname) + 1);
+  int x;
+  for (x = 0; listname[x]; x++)
+    listname_[x] = tolower(listname[x]);
+  listname_[x] = '\0';
+  const int listlength = strlen (listname);
+
+  char *path = ALLOC_A (strlen (LISTSERV_PATH) + 2 + listlength);
+  sprintf (path, "%s/%s", LISTSERV_PATH, listname_);
+  int found = scandir (path, &files, SELECTOR_LOG, listserv_log_sort);
+  sprintf(path, "%s.", listname_);
+  for (x = 0; x < found; x++) {
+    if (strstr (files[x]->d_name, path) != files[x]->d_name) {
+      free (files[x]);
       continue;
     }
-    if (filelist == NULL) break;
-    char t1[100], t2[100];
-    sscanf(filelist, "%s %s", t1, t2);
-    if (char2_pos + 1 == char2_len) {
+    l->cached_char2[char2_pos] = strdup (files[x]->d_name + 1 + listlength);
+    free (files[x]);
+    int j;
+    for (j = 0; l->cached_char2[char2_pos][j]; j++)
+      l->cached_char2[char2_pos][j] = toupper (l->cached_char2[char2_pos][j]);
+    char2_pos++;
+    if (char2_pos == char2_len) {
       char2_len+=100;
       l->cached_char2 = realloc (l->cached_char2,
 				 char2_len * sizeof(char**));
-    };
-    l->cached_char2[char2_pos++] = strdup (t2);
-    filelist = strchr(filelist+1, '\n');
+    }
   }
+  free (files);
+  sprintf (path, "%s/home", LISTSERV_PATH);
+  found = scandir (path, &files, SELECTOR_CHANGELOG, alphasort);
+  sprintf (path, "%s.changelog", listname_);
+  FREE_A (listname_);
+  for (x = 0; x < found; x++) {
+    if (strstr (files[x]->d_name, path) != files[x]->d_name) {
+      free (files[x]);
+      continue;
+    }
+    l->cached_char2[char2_pos] = strdup (files[x]->d_name + 1 + listlength);
+    free (files[x]);
+    int j;
+    for (j = 0; l->cached_char2[char2_pos][j]; j++)
+      l->cached_char2[char2_pos][j] = toupper (l->cached_char2[char2_pos][j]);
+    char2_pos++;
+    if (char2_pos == char2_len) {
+      char2_len+=100;
+      l->cached_char2 = realloc (l->cached_char2,
+				 char2_len * sizeof(char**));
+    }
+  }
+  free (files);
+  FREE_A (path);
+#else
+  char *filelist = listserv_get (l, listname, "FILELIST");
+  if (filelist[0] != 'T') {
+    while (filelist) {
+      if (filelist[0] == '*' || (filelist[0] == '\n' && filelist[1] == '\n')) {
+	filelist = strchr (filelist + 1, '\n');
+	if (filelist) filelist++;
+	if (filelist && filelist[0] == '\n' ) filelist++;
+	continue;
+      }
+      if (filelist == NULL) break;
+      char t1[100], t2[100];
+      sscanf(filelist, "%s %s", t1, t2);
+      if (char2_pos + 1 == char2_len) {
+	char2_len+=100;
+	l->cached_char2 = realloc (l->cached_char2,
+				   char2_len * sizeof(char**));
+      }
+      l->cached_char2[char2_pos++] = strdup (t2);
+      filelist = strchr(filelist+1, '\n');
+    }
+  }
+#endif
   l->cached_char2[char2_pos] = NULL;
   return l->cached_char2;
 }
@@ -638,8 +719,32 @@ listserv_get (struct listserv *l, const char * const listname,
   char *cmd;
   if (l->cached_files[i][0] != '\0' 
       && strcmp(l->cached_files[i], "HDR") != 0) {
+#ifdef LISTSERV_PATH
+    char *ext = ALLOC_A (strlen (extension) + 1);
+    int z;
+    char* listname_ = ALLOC_A (strlen (listname) + 1);
+    for (z = 0; listname[z]; z++)
+      listname_[z] = tolower (listname[z]);
+    listname_[z] = '\0';
+    const int listlength = strlen (listname);
+    for (z = 0; extension[z]; z++)
+      ext[z] = tolower (extension[z]);
+    ext[z] = '\0';
+
+    char *path = ALLOC_A (6 + 2 * strlen (listname) + strlen (ext));
+    if (ext[0] == 'c' || ext[0] == 'm' || ext[0] == 's' || ext[0] == 'w')
+      sprintf (path, "home/%s.%s", listname_, ext);
+    else if (ext[0] == 'l' || ext[0] == 'n')
+      sprintf (path, "%s/%s.%s", listname_, listname_, ext);
+    l->cached_files[i+1] = load_file (path);
+    FREE_A (listname);
+    FREE_A (path);
+    FREE_A (ext);
+    return l->cached_files[i+1];
+#else
     cmd = ALLOC_A (11 + strlen (listname) + strlen (extension));
     sprintf (cmd, "GET %s %s (MSG", listname, extension);
+#endif
   } else if (strcmp(l->cached_files[i], "HDR") == 0) {
     cmd = ALLOC_A (21 + strlen (listname));
     sprintf (cmd, "GET %s (MSG NOLOCK HDR", listname);

@@ -1,3 +1,6 @@
+21.07.2015 Add possibility to read wwwtpl, mailtpl, changelog and log files
+	directly from the filesystem, enabled when ./configure --with-filesystem
+
 19.09.2013 Move gnulib directory from src/gnulib/ to lib/
 19.09.2013 Remove the word template from liblilistserv.h, so that file can be included in C++ code.
 
