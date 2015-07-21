@@ -20,7 +20,7 @@ AC_ARG_WITH(filesystem, AS_HELP_STRING([--with-filesystem=/home/listserv],
 AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_LEX
-AM_PROG_CC_C_O
+AC_PROG_CC
 gl_VISIBILITY
 AC_CHECK_HEADERS_ONCE(pwd.h, sys/types.h, net/errno.h)
 AC_TYPE_SIZE_T
