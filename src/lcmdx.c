@@ -83,7 +83,7 @@ listserv_command (struct listserv *const l, const char *const command)
   unsigned char *wb;
   int rc, ss = 0, len, orglen, n;
   unsigned int ibuf[2];
-  char *ret = NULL;
+  char *ret;
 
   /* Initialize */
   len = strlen(command) + strlen(l->password) + 4;
