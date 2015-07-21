@@ -39,7 +39,7 @@
 #include <ctype.h>
 #define YY_NO_INPUT 1
 %}
-%option case-insensitive 8bit noyywrap
+%option case-insensitive 8bit noyywrap never-interactive
 %option noyyget_leng noyyget_text noinput
 %option noyyget_lineno noyyset_lineno noyyget_in noyyset_in 
 %option noyyget_out noyyset_out noyyget_lloc noyyset_lloc
