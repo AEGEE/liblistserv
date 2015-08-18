@@ -79,7 +79,6 @@ enum listserv_content_filter_actions { REJECT = 'R', ALLOW = 'A',
     char *email;
     char *password;
     struct addrinfo *addrres;
-    int port;
     struct listserv_subscriber **subscribers;
     char *mailtpl_default;
     char *mailtpl_site;
@@ -91,6 +90,7 @@ enum listserv_content_filter_actions { REJECT = 'R', ALLOW = 'A',
     char **cached_char2;
     char ***keywords;
     char *keywords_initialized_for_list;
+    int port;
   };
 
   extern LIBLISTSERV_API struct listserv *listserv_init (const char *email,

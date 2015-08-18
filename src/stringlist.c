@@ -9,9 +9,9 @@ listserv_stringlist_init ()
 {
   struct listserv_stringlist *sl =
     malloc (sizeof (struct listserv_stringlist));
-  sl->num_elements = 0;
   sl->string_presentation = NULL;
   sl->total_length_of_elements = 0;
+  sl->num_elements = 0;
   sl->size_for_elements = 1024;
   sl->elements = malloc (sl->size_for_elements * sizeof (char *));
   return sl;

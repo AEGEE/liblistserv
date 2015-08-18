@@ -1,8 +1,8 @@
 struct listserv_stringlist
 {
-  int num_elements;
   char **elements;
   char *string_presentation;
+  int num_elements;
   int total_length_of_elements;
   int size_for_elements;
 };
